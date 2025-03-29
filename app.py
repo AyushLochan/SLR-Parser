@@ -101,6 +101,41 @@ def generateStates(statesDict, stateMap, separatedRulesList):
     while len(statesDict) != prev_len:
         prev_len = len(statesDict)
         keys = list(statesDict.keys())
+
+def first(rule, diction, term_userdef):
+   
+    if rule and rule[0]:
+        if rule[0] in term_userdef:
+            return rule[0]
+        elif rule[0] == '#':
+            return '#'
+    if rule:
+        if rule[0] in diction:
+            fres = []
+            rhs_rules = diction[rule[0]]
+            for itr in rhs_rules:
+                indivRes = first(itr, diction, term_userdef)
+                if isinstance(indivRes, list):
+                    fres.extend(indivRes)
+                else:
+                    fres.append(indivRes)
+            if '#' not in fres:
+                return fres
+            else:
+                newList = []
+                fres.remove('#')
+                if len(rule) > 1:
+                    ansNew = first(rule[1:], diction, term_userdef)
+                    if ansNew:
+                        if isinstance(ansNew, list):
+                            newList = fres + ansNew
+                        else:
+                            newList = fres + [ansNew]
+                    else:
+                        newList = fres
+                    return newList
+                fres.append('#')
+                return fres
         for key in keys:
             if key not in called_GOTO_on:
                 called_GOTO_on.append(key)
