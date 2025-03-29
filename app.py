@@ -59,8 +59,8 @@ def compute_GOTO(state, statesDict, stateMap, separatedRulesList):
 
     for symbol in generateStatesFor:
         GOTO(state, symbol, statesDict, stateMap, separatedRulesList)
+        
 def GOTO(state, charNextToDot, statesDict, stateMap, separatedRulesList):
-    """Perform the shift of the dot for a specific symbol, then add closure items."""
     newState = []
     for rule in statesDict[state]:
         indexOfDot = rule[1].index('.')
@@ -94,3 +94,14 @@ def GOTO(state, charNextToDot, statesDict, stateMap, separatedRulesList):
         stateMap[(state, charNextToDot)] = new_index
     else:
         stateMap[(state, charNextToDot)] = stateExists
+        
+def generateStates(statesDict, stateMap, separatedRulesList):
+    prev_len = -1
+    called_GOTO_on = []
+    while len(statesDict) != prev_len:
+        prev_len = len(statesDict)
+        keys = list(statesDict.keys())
+        for key in keys:
+            if key not in called_GOTO_on:
+                called_GOTO_on.append(key)
+                compute_GOTO(key, statesDict, stateMap, separatedRulesList)
