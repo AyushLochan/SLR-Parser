@@ -3,7 +3,6 @@ import copy
 import pandas as pd
 
 def grammarAugmentation(rules, nonterm_userdef, start_symbol):
-    """Augment the grammar by adding S' -> S."""
     newRules = []
     newChar = start_symbol + "'"
     while newChar in nonterm_userdef:
@@ -182,3 +181,60 @@ def follow(nt, diction, start_symbol, term_userdef):
                         else:
                             solset.add(res)
     return list(solset)
+    
+def createParseTable(statesDict, stateMap, T, NT, separatedRulesList, rules, diction, term_userdef, start_symbol):
+    rows = list(statesDict.keys())
+    cols = T + ['$'] + NT
+    Table = []
+    for _ in rows:
+        Table.append([''] * len(cols))
+
+
+    for entry in stateMap:
+        state = entry[0]
+        symbol = entry[1]
+        a = rows.index(state)
+        b = cols.index(symbol)
+        if symbol in NT:
+
+            Table[a][b] += f"{stateMap[entry]} "
+        elif symbol in T:
+
+            Table[a][b] += f"S{stateMap[entry]} "
+
+    numbered = {}
+    key_count = 0
+    for rule in separatedRulesList:
+        tempRule = copy.deepcopy(rule)
+        tempRule[1].remove('.')
+        numbered[key_count] = tempRule
+        key_count += 1
+
+    rules_copy = rules.copy()
+    addedR = f"{separatedRulesList[0][0]} -> {separatedRulesList[0][1][1]}"
+    rules_copy.insert(0, addedR)
+
+    for rule in rules_copy:
+        k = rule.split("->")
+        lhs = k[0].strip()
+        rhs = k[1].strip()
+        multirhs = [r.strip().split() for r in rhs.split('|')]
+        diction[lhs] = multirhs
+
+    for stateno in statesDict:
+        for rule in statesDict[stateno]:
+            if rule[1][-1] == '.':
+                temp2 = copy.deepcopy(rule)
+                temp2[1].remove('.')
+                for key in numbered:
+                    if numbered[key] == temp2:
+                        follow_result = follow(rule[0], diction, start_symbol, term_userdef)
+                        for col in follow_result:
+                            if col in cols:
+                                index = cols.index(col)
+                                if key == 0:
+                                    Table[stateno][index] = "Accept"
+                                else:
+                                    Table[stateno][index] += f"R{key} "
+    return Table, rows, cols
+
