@@ -238,3 +238,80 @@ def createParseTable(statesDict, stateMap, T, NT, separatedRulesList, rules, dic
                                     Table[stateno][index] += f"R{key} "
     return Table, rows, cols
 
+def main():
+    st.set_page_config(page_title="SLR(1) Parser Generator", layout="wide")
+    st.title("SLR(1) Parser Generator")
+    
+    with st.sidebar:
+        st.header("Grammar Input")
+        grammar_input = st.text_area(
+            "Enter Grammar Rules (one per line)", 
+            height=150,
+            value="""E -> E + T | T
+T -> T * F | F
+F -> ( E ) | id"""
+        )
+        nonterm_input = st.text_input("Non-Terminals (comma separated)", value="E, T, F")
+        term_input = st.text_input("Terminals (comma separated)", value="id, +, *, (, )")
+        generate_btn = st.button("Generate SLR(1) Parsing Table")
+    
+    if generate_btn:
+
+        rules = [line.strip() for line in grammar_input.splitlines() if line.strip()]
+        nonterm_userdef = [x.strip() for x in nonterm_input.split(',')]
+        term_userdef = [x.strip() for x in term_input.split(',')]
+        start_symbol = nonterm_userdef[0]
+
+        st.subheader("Original Grammar:")
+        for rule in rules:
+            st.write(rule)
+
+        separatedRulesList = grammarAugmentation(rules, nonterm_userdef, start_symbol)
+        st.subheader("Grammar after Augmentation:")
+        aug_output = "\n".join([f"{rule[0]} -> {' '.join(rule[1])}" for rule in separatedRulesList])
+        st.text(aug_output)
+
+        I0 = findClosure(0, separatedRulesList[0][0], separatedRulesList, separatedRulesList[0][0])
+        st.subheader("Calculated Closure: I0")
+        closure_output = "\n".join([f"{rule[0]} -> {' '.join(rule[1])}" for rule in I0])
+        st.text(closure_output)
+
+        statesDict = {}
+        stateMap = {}
+        statesDict[0] = I0
+        generateStates(statesDict, stateMap, separatedRulesList)
+        
+        st.subheader("Generated States:")
+        states_output = ""
+        for st_num, state in statesDict.items():
+            states_output += f"I{st_num}:\n"
+            for rule in state:
+                states_output += f"   {rule[0]} -> {' '.join(rule[1])}\n"
+            states_output += "\n"
+        st.text(states_output)
+        
+        st.subheader("GOTO Computation:")
+        goto_output = ""
+        for key in stateMap:
+            goto_output += f"GOTO(I{key[0]}, {key[1]}) = I{stateMap[key]}\n"
+        st.text(goto_output)
+
+        diction = {}
+        Table, rowStates, cols = createParseTable(
+            statesDict,
+            stateMap,
+            term_userdef,
+            nonterm_userdef,
+            separatedRulesList,
+            rules,
+            diction,
+            term_userdef,
+            separatedRulesList[0][0]
+        )
+
+        st.subheader("SLR(1) Parsing Table:")
+        df = pd.DataFrame(Table, index=[f"I{i}" for i in rowStates], columns=cols)
+        st.dataframe(df)
+
+if __name__ == "__main__":
+    main()
