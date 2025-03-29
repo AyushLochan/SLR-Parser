@@ -59,3 +59,38 @@ def compute_GOTO(state, statesDict, stateMap, separatedRulesList):
 
     for symbol in generateStatesFor:
         GOTO(state, symbol, statesDict, stateMap, separatedRulesList)
+def GOTO(state, charNextToDot, statesDict, stateMap, separatedRulesList):
+    """Perform the shift of the dot for a specific symbol, then add closure items."""
+    newState = []
+    for rule in statesDict[state]:
+        indexOfDot = rule[1].index('.')
+        if rule[1][-1] != '.':
+            if rule[1][indexOfDot + 1] == charNextToDot:
+                shiftedRule = copy.deepcopy(rule)
+
+                shiftedRule[1][indexOfDot] = shiftedRule[1][indexOfDot + 1]
+                shiftedRule[1][indexOfDot + 1] = '.'
+                newState.append(shiftedRule)
+
+    addClosureRules = []
+    for rule in newState:
+        indexDot = rule[1].index('.')
+        if rule[1][-1] != '.':
+            closureRes = findClosure(newState, rule[1][indexDot + 1], separatedRulesList, None)
+            for r in closureRes:
+                if r not in addClosureRules and r not in newState:
+                    addClosureRules.append(r)
+    newState.extend(addClosureRules)
+
+    stateExists = -1
+    for state_num, st_state in statesDict.items():
+        if st_state == newState:
+            stateExists = state_num
+            break
+
+    if stateExists == -1:
+        new_index = max(statesDict.keys()) + 1
+        statesDict[new_index] = newState
+        stateMap[(state, charNextToDot)] = new_index
+    else:
+        stateMap[(state, charNextToDot)] = stateExists
