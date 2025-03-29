@@ -47,3 +47,15 @@ def findClosure(input_state, dotSymbol, separatedRulesList, init_start_symbol):
             if rule not in closureSet:
                 closureSet.append(rule)
     return closureSet
+    
+def compute_GOTO(state, statesDict, stateMap, separatedRulesList):
+    generateStatesFor = []
+    for rule in statesDict[state]:
+        if rule[1][-1] != '.':
+            indexOfDot = rule[1].index('.')
+            dotPointsHere = rule[1][indexOfDot + 1]
+            if dotPointsHere not in generateStatesFor:
+                generateStatesFor.append(dotPointsHere)
+
+    for symbol in generateStatesFor:
+        GOTO(state, symbol, statesDict, stateMap, separatedRulesList)
