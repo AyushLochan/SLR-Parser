@@ -140,3 +140,45 @@ def first(rule, diction, term_userdef):
             if key not in called_GOTO_on:
                 called_GOTO_on.append(key)
                 compute_GOTO(key, statesDict, stateMap, separatedRulesList)
+
+def follow(nt, diction, start_symbol, term_userdef):
+    
+    solset = set()
+    if nt == start_symbol:
+        solset.add('$')
+    for curNT in diction:
+        rhs = diction[curNT]
+        for subrule in rhs:
+            if nt in subrule:
+                while nt in subrule:
+                    index_nt = subrule.index(nt)
+                    subrule = subrule[index_nt + 1:]
+                    if subrule:
+                        res = first(subrule, diction, term_userdef)
+                        if '#' in (res if isinstance(res, list) else [res]):
+                            newList = []
+                            if isinstance(res, list):
+                                res_list = res.copy()
+                                res_list.remove('#')
+                            else:
+                                res_list = [res]
+                            ansNew = follow(curNT, diction, start_symbol, term_userdef)
+                            if ansNew:
+                                if isinstance(ansNew, list):
+                                    newList = res_list + ansNew
+                                else:
+                                    newList = res_list + [ansNew]
+                            else:
+                                newList = res_list
+                            res = newList
+                    else:
+
+                        if nt != curNT:
+                            res = follow(curNT, diction, start_symbol, term_userdef)
+                    if res:
+                        if isinstance(res, list):
+                            for g in res:
+                                solset.add(g)
+                        else:
+                            solset.add(res)
+    return list(solset)
