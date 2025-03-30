@@ -46,7 +46,7 @@ def findClosure(input_state, dotSymbol, separatedRulesList, init_start_symbol):
             if rule not in closureSet:
                 closureSet.append(rule)
     return closureSet
-    
+
 def compute_GOTO(state, statesDict, stateMap, separatedRulesList):
     generateStatesFor = []
     for rule in statesDict[state]:
@@ -58,7 +58,7 @@ def compute_GOTO(state, statesDict, stateMap, separatedRulesList):
 
     for symbol in generateStatesFor:
         GOTO(state, symbol, statesDict, stateMap, separatedRulesList)
-        
+
 def GOTO(state, charNextToDot, statesDict, stateMap, separatedRulesList):
     newState = []
     for rule in statesDict[state]:
@@ -93,16 +93,19 @@ def GOTO(state, charNextToDot, statesDict, stateMap, separatedRulesList):
         stateMap[(state, charNextToDot)] = new_index
     else:
         stateMap[(state, charNextToDot)] = stateExists
-        
+
 def generateStates(statesDict, stateMap, separatedRulesList):
     prev_len = -1
     called_GOTO_on = []
     while len(statesDict) != prev_len:
         prev_len = len(statesDict)
         keys = list(statesDict.keys())
+        for key in keys:
+            if key not in called_GOTO_on:
+                called_GOTO_on.append(key)
+                compute_GOTO(key, statesDict, stateMap, separatedRulesList)
 
 def first(rule, diction, term_userdef):
-   
     if rule and rule[0]:
         if rule[0] in term_userdef:
             return rule[0]
@@ -135,13 +138,8 @@ def first(rule, diction, term_userdef):
                     return newList
                 fres.append('#')
                 return fres
-        for key in keys:
-            if key not in called_GOTO_on:
-                called_GOTO_on.append(key)
-                compute_GOTO(key, statesDict, stateMap, separatedRulesList)
 
 def follow(nt, diction, start_symbol, term_userdef):
-    
     solset = set()
     if nt == start_symbol:
         solset.add('$')
@@ -181,8 +179,9 @@ def follow(nt, diction, start_symbol, term_userdef):
                         else:
                             solset.add(res)
     return list(solset)
-    
+
 def createParseTable(statesDict, stateMap, T, NT, separatedRulesList, rules, diction, term_userdef, start_symbol):
+    """Create the SLR(1) parsing table with SHIFT, GOTO, REDUCE, and ACCEPT actions."""
     rows = list(statesDict.keys())
     cols = T + ['$'] + NT
     Table = []
