@@ -1,3 +1,6 @@
+### Demo Link
+https://slr-parser-cd.streamlit.app/
+
 ### Grammar Parser and Augmentation
 _This Python project is designed to manipulate and process formal grammars, particularly in the context of computational linguistics. The key functionalities of this code include grammar augmentation, closure calculation, state generation, and the computation of the FIRST and FOLLOW sets for grammar symbols._
 
